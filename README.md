@@ -1,66 +1,214 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📝 Simple Task Management System (Laravel 12 + Sail + Docker)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel 12-based task manager with user roles, task assignment, activity logs, RESTful API, and full Docker support using Laravel Sail.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- ✅ User registration/login/password reset via Laravel Breeze
+- ✅ Role-based access: **Admin** & **User**
+- ✅ CRUD for Tasks (`title`, `description`, `due_date`, `status`)
+- ✅ Assign tasks to other users
+- ✅ Email notifications on assignment via **Mailpit**
+- ✅ Task filtering/search by status, due date, and text
+- ✅ Activity log for task changes
+- ✅ Admins can manage all tasks; Users can only manage their own
+- ✅ RESTful API for all task operations
+- ✅ Unit & Feature tests
+- ✅ Secure and optimized: CSRF/XSS protection, eager loading, indexing
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🧱 Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Docker & Docker Compose installed
+- Laravel Sail
+- Composer
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🧰 Installation
 
-## Laravel Sponsors
+```bash
+git clone https://github.com/your-username/task-manager.git
+cd task-manager
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# Install dependencies
+composer install
 
-### Premium Partners
+# Set up Laravel Sail
+php artisan sail:install --with=mysql,mailpit
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+# Start Docker services
+./vendor/bin/sail up -d
 
-## Contributing
+# Generate env keys and migrate
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan migrate --seed
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 👤 Test User
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Seeder creates an admin and a regular user:
 
-## Security Vulnerabilities
+| Role  | Email              | Password  |
+|-------|--------------------|-----------|
+| Admin | admin@test.com     | password  |
+| User  | user1@test.com     | password  |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 🌱 Seeder & Dummy Data
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+`DatabaseSeeder` calls:
+
+```php
+$this->call([
+    UserSeeder::class,
+    TaskSeeder::class,
+]);
+```
+
+**UserSeeder** creates:
+- 1 Admin (`is_admin = true`)
+- 4 Users
+
+**TaskSeeder** creates:
+- 20 tasks randomly assigned to users
+
+---
+
+## 🔁 Web Routes (`routes/web.php`)
+
+```php
+use App\Http\Controllers\TaskController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [TaskController::class, 'index'])->name('dashboard');
+    Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::get('/tasks/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit');
+    Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+    Route::post('/tasks/{task}/assign', [TaskController::class, 'assign'])->name('tasks.assign');
+});
+```
+
+---
+
+## 📂 File Structure
+
+```
+app/
+├── Models/Task.php          # Includes scopes, activity logging
+├── Policies/TaskPolicy.php  # Handles ownership and admin logic
+├── Http/
+│   ├── Controllers/
+│   │   └── TaskController.php
+│   ├── Requests/TaskRequest.php
+resources/views/
+├── tasks/index.blade.php
+├── tasks/create.blade.php
+├── tasks/edit.blade.php
+├── layouts/app.blade.php
+routes/
+├── web.php
+├── api.php
+```
+
+---
+
+## 🧠 Controller Example: TaskController (Web)
+
+```php
+public function index()
+{
+    $tasks = auth()->user()->is_admin
+        ? Task::latest()->paginate(10)
+        : Task::where('user_id', auth()->id())->latest()->paginate(10);
+
+    return view('tasks.index', compact('tasks'));
+}
+
+public function assign(Request $request, Task $task)
+{
+    $request->validate(['user_id' => 'required|exists:users,id']);
+
+    $task->update(['user_id' => $request->user_id]);
+
+    // send mail via Mailpit
+    Mail::to(User::find($request->user_id))->send(new TaskAssigned($task));
+
+    return redirect()->back()->with('success', 'Task reassigned.');
+}
+```
+
+---
+
+## 🧪 Testing
+
+Run PHPUnit tests:
+
+```bash
+./vendor/bin/sail test
+```
+
+Tests include:
+- Task creation, filtering, and assignment
+- API access and permissions
+- User registration/login
+
+---
+
+## 📬 Mailpit
+
+View all outgoing emails:
+
+```
+http://localhost:8025
+```
+
+---
+
+## 📦 API Routes
+
+| Method | Endpoint                   | Description               |
+|--------|----------------------------|---------------------------|
+| POST   | /api/auth/register         | Register a user           |
+| POST   | /api/auth/login            | Login and get token       |
+| GET    | /api/tasks                 | List tasks (with filters) |
+| POST   | /api/tasks                 | Create task               |
+| GET    | /api/tasks/{task}          | Show task                 |
+| PUT    | /api/tasks/{task}          | Update task               |
+| DELETE | /api/tasks/{task}          | Delete task               |
+| POST   | /api/tasks/{task}/assign   | Assign to another user    |
+
+---
+
+## 🔒 Security Best Practices
+
+- ✅ CSRF protection via `@csrf`
+- ✅ XSS-safe via Blade’s `{{ }}`
+- ✅ SQL injection-safe via query builder
+- ✅ Indexes on `user_id`, `status`, `due_date` for performance
+- ✅ Eager load relationships to reduce N+1 queries
+
+---
+
+## 🚀 Running Locally
+
+```bash
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate --seed
+```
+
+---
+
+## 🧾 Deployment Tips
+
+- Set `APP_ENV=production` and `APP_DEBUG=false`
+- Use a real SMTP mailer instead of Mailpit
+- Configure storage link: `php artisan storage:link`
