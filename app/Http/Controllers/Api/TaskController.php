@@ -37,4 +37,19 @@ class TaskController extends Controller
         $task->delete();
         return response()->json(null, 204);
     }
+
+    public function reassign(Request $request, Task $task)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $task->user_id = $request->user_id;
+        $task->save();
+
+        return response()->json([
+            'message' => 'Task reassigned successfully.',
+            'task' => $task,
+        ]);
+    }
 }
